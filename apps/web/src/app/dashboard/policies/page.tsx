@@ -1,4 +1,4 @@
-import { Plus, ToggleLeft, ToggleRight, Pencil, Trash2 } from "lucide-react";
+import { ToggleLeft, ToggleRight, Pencil, Trash2 } from "lucide-react";
 import type { SafetyPolicy, PolicyType, PolicySeverity } from "@nexusguard/shared-types";
 import { CreatePolicyForm } from "@/components/create-policy-form";
 
@@ -80,7 +80,7 @@ function severityBadge(severity: PolicySeverity) {
   return map[severity];
 }
 
-function typeBadge(type: PolicyType) {
+function typeBadge(_type: PolicyType) {
   return "ng-badge bg-ng-gray-100";
 }
 
