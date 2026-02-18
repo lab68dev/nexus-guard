@@ -28,6 +28,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Jackson (explicit — used by TrafficWebSocketHandler) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
         <!-- WebFlux (Reactive proxy for LLM interception) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
