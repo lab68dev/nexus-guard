@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # ── Java setup (only needed for java-kotlin matrix leg) ──
       - name: Setup Java 21 (Temurin)
