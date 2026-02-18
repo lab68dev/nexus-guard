@@ -43,10 +43,12 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint -w apps/web
+        working-directory: apps/web
+        run: npm run lint
 
       - name: Build Next.js application
-        run: npm run build -w apps/web
+        working-directory: apps/web
+        run: npm run build
         env:
           # Provide stub values so the build doesn't fail on missing env vars
           GOVERNANCE_API_URL: http://localhost:8080
@@ -71,13 +73,9 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Make mvnw executable
-        working-directory: services/governance-api
-        run: chmod +x mvnw
-
       - name: Run Maven tests
         working-directory: services/governance-api
-        run: ./mvnw test --no-transfer-progress
+        run: mvn test --no-transfer-progress
         env:
           SPRING_PROFILES_ACTIVE: test
 
