@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# NexusGuard — CD: Deploy Governance API (Spring Boot → Render)
+# Triggers only on pushes to main that touch the governance-api service.
+#
+# Required GitHub Secrets:
+#   RENDER_API_KEY           — Render.com API key
+#   RENDER_API_SERVICE_ID    — Service ID for nexusguard-governance-api on Render
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CD — Deploy API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "services/governance-api/**"
+
+jobs:
+  deploy-api:
+    name: "Deploy nexusguard-governance-api → Render"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://nexusguard-governance-api.onrender.com
+
+    steps:
+      - name: Trigger Render deploy
+        id: trigger
+        run: |
+          echo "Triggering deploy for service: ${{ secrets.RENDER_API_SERVICE_ID }}"
+          RESPONSE=$(curl --silent --show-error --fail \
+            --request POST \
+            --url "https://api.render.com/v1/services/${{ secrets.RENDER_API_SERVICE_ID }}/deploys" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --data '{"clearCache": "do_not_clear"}')
+          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // .deploy.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "Deploy triggered — ID: $DEPLOY_ID"
+
+      - name: Wait for deploy to complete
+        run: |
+          DEPLOY_ID="${{ steps.trigger.outputs.deploy_id }}"
+          SERVICE_ID="${{ secrets.RENDER_API_SERVICE_ID }}"
+          MAX_WAIT=900  # 15 minutes (Java builds take longer)
+          ELAPSED=0
+          INTERVAL=20
+
+          echo "Polling deploy status for ID: $DEPLOY_ID"
+
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            STATUS=$(curl --silent --fail \
+              --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              | jq -r '.status')
+
+            echo "  [$ELAPSED s] Status: $STATUS"
+
+            case "$STATUS" in
+              live)
+                echo "Deploy succeeded!"
+                exit 0
+                ;;
+              build_failed|update_failed|canceled|deactivated)
+                echo "Deploy failed with status: $STATUS"
+                exit 1
+                ;;
+            esac
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          echo "Timed out waiting for deploy to complete."
+          exit 1

@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# NexusGuard — CI Quality Gate
+# Runs on every push and pull request targeting main or develop.
+# Jobs run in parallel:
+#   1. lint-and-build-web  → ESLint + Next.js build (Node 22)
+#   2. test-api            → Maven test suite (Java 21)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI — Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Job 1: Next.js — Lint & Build ──────────────────────────────────────────
+  lint-and-build-web:
+    name: "Web — Lint & Build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies (workspace root)
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint --workspace=apps/web
+
+      - name: Build Next.js application
+        run: npm run build --workspace=apps/web
+        env:
+          # Provide stub values so the build doesn't fail on missing env vars
+          GOVERNANCE_API_URL: http://localhost:8080
+          GOVERNANCE_SERVICE_TOKEN: ci-stub-token
+          DEFAULT_ORG_ID: org_ci
+          NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws/traffic
+
+  # ── Job 2: Spring Boot — Test ───────────────────────────────────────────────
+  test-api:
+    name: "API — Maven Test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Run Maven tests
+        working-directory: services/governance-api
+        run: ./mvnw test --no-transfer-progress
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-reports
+          path: services/governance-api/target/surefire-reports/
+          retention-days: 7
