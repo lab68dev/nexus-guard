@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────
+# NexusGuard — Render.com Infrastructure Blueprint
+# ─────────────────────────────────────────────
+# Deploys:
+#   1. Next.js 16 frontend (public Web Service)
+#   2. Spring Boot Governance API (private service)
+#   3. Neon PostgreSQL (external via connection string)
+# ─────────────────────────────────────────────
+
+services:
+  # ── Frontend: Next.js 16+ (Public Web Service) ──
+  - type: web
+    name: nexusguard-web
+    runtime: node
+    region: singapore
+    plan: standard
+    buildCommand: |
+      cd apps/web && npm install && npm run build
+    startCommand: |
+      cd apps/web && node .next/standalone/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: GOVERNANCE_API_URL
+        fromService:
+          type: pserv
+          name: nexusguard-governance-api
+          property: hostport
+      - key: GOVERNANCE_SERVICE_TOKEN
+        generateValue: true
+      - key: DEFAULT_ORG_ID
+        value: org_default
+      - key: NEXT_PUBLIC_WS_URL
+        value: wss://nexusguard-governance-api.internal:8080/ws/traffic
+    healthCheckPath: /
+    autoDeploy: true
+    branch: main
+
+  # ── Backend: Spring Boot 3.4+ (Private Service) ──
+  - type: pserv
+    name: nexusguard-governance-api
+    runtime: java
+    region: singapore
+    plan: standard
+    buildCommand: |
+      cd services/governance-api && ./mvnw clean package -DskipTests
+    startCommand: |
+      cd services/governance-api && java -jar target/governance-api-0.1.0.jar
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0"
+      - key: NEON_DATABASE_URL
+        sync: false
+      - key: NEON_DATABASE_USER
+        sync: false
+      - key: NEON_DATABASE_PASSWORD
+        sync: false
+      - key: JWT_ISSUER_URI
+        value: https://auth.nexusguard.io
+      - key: GOVERNANCE_SERVICE_TOKEN
+        fromService:
+          type: web
+          name: nexusguard-web
+          envVarKey: GOVERNANCE_SERVICE_TOKEN
+      - key: CORS_ORIGINS
+        value: https://nexusguard-web.onrender.com
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+    autoDeploy: true
+    branch: main
