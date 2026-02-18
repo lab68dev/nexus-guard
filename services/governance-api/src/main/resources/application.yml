@@ -1,0 +1,89 @@
+# ─────────────────────────────────────────────
+# NexusGuard Governance API — Application Config
+# ─────────────────────────────────────────────
+
+spring:
+  application:
+    name: nexusguard-governance-api
+
+  # ── Virtual Threads (Project Loom) ──
+  threads:
+    virtual:
+      enabled: true
+
+  # ── Neon PostgreSQL ──
+  datasource:
+    url: ${NEON_DATABASE_URL:jdbc:postgresql://localhost:5432/nexusguard}
+    username: ${NEON_DATABASE_USER:nexusguard}
+    password: ${NEON_DATABASE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 10000
+      idle-timeout: 300000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        default_schema: public
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # ── Security / JWT ──
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://auth.nexusguard.io}
+          audiences: nexusguard-api
+
+  # ── Jackson ──
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# ── Server ──
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain
+    min-response-size: 1024
+
+# ── Actuator ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Structured JSON Logging ──
+logging:
+  level:
+    root: INFO
+    com.nexusguard: DEBUG
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+
+# ── Custom App Config ──
+nexusguard:
+  service-token: ${GOVERNANCE_SERVICE_TOKEN:dev-service-token}
+  proxy:
+    default-timeout-ms: 30000
+    max-body-size-bytes: 1048576
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
