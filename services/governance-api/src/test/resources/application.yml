@@ -20,13 +20,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 
-  # ── Disable JWT resource server (no auth server in CI) ──
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  # ── Stub JWT issuer URI (prevents network call to real auth server) ──
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999/auth
 
   # ── Disable Flyway / Liquibase if present ──
   flyway:
     enabled: false
   liquibase:
     enabled: false
+
+# ── Stub custom app properties (satisfies @Value in SecurityConfig) ──
+nexusguard:
+  service-token: ci-test-token
+  cors:
+    allowed-origins: http://localhost:3000
