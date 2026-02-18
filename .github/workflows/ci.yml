@@ -43,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint --workspace=apps/web
+        run: npm run lint -w apps/web
 
       - name: Build Next.js application
         run: npm run build --workspace=apps/web
@@ -70,6 +70,10 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: "maven"
+
+      - name: Make mvnw executable
+        working-directory: services/governance-api
+        run: chmod +x mvnw
 
       - name: Run Maven tests
         working-directory: services/governance-api
