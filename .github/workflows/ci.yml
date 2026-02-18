@@ -46,7 +46,7 @@ jobs:
         run: npm run lint -w apps/web
 
       - name: Build Next.js application
-        run: npm run build --workspace=apps/web
+        run: npm run build -w apps/web
         env:
           # Provide stub values so the build doesn't fail on missing env vars
           GOVERNANCE_API_URL: http://localhost:8080
