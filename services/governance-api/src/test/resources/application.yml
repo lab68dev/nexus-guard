@@ -1,0 +1,32 @@
+# ─────────────────────────────────────────────
+# NexusGuard Governance API — Test Configuration
+# Overrides application.yml for the 'test' Spring profile.
+# Uses H2 in-memory DB and disables external dependencies.
+# ─────────────────────────────────────────────
+
+spring:
+  # ── In-memory H2 (replaces Neon PostgreSQL in CI) ──
+  datasource:
+    url: jdbc:h2:mem:nexusguard_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # ── Disable JWT resource server (no auth server in CI) ──
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+
+  # ── Disable Flyway / Liquibase if present ──
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
