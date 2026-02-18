@@ -20,12 +20,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 
-  # ── Stub JWT issuer URI (prevents network call to real auth server) ──
+  # ── Stub JWK set URI (skips OIDC discovery, no network call at startup) ──
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:9999/auth
+          jwk-set-uri: http://localhost:9999/auth/jwks
 
   # ── Disable Flyway / Liquibase if present ──
   flyway:

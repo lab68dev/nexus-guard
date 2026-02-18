@@ -80,7 +80,7 @@ function severityBadge(severity: PolicySeverity) {
   return map[severity];
 }
 
-function typeBadge(type: PolicyType) {
+function typeBadge(_type: PolicyType) {
   return "ng-badge bg-ng-gray-100";
 }
 
