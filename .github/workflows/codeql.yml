@@ -43,7 +43,7 @@ jobs:
       # ── Java setup (only needed for java-kotlin matrix leg) ──
       - name: Setup Java 21 (Temurin)
         if: matrix.language == 'java-kotlin'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: "21"
           distribution: "temurin"
