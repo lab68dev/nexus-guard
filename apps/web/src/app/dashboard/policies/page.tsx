@@ -1,4 +1,4 @@
-import { Plus, ToggleLeft, ToggleRight, Pencil, Trash2 } from "lucide-react";
+import { ToggleLeft, ToggleRight, Pencil, Trash2 } from "lucide-react";
 import type { SafetyPolicy, PolicyType, PolicySeverity } from "@nexusguard/shared-types";
 import { CreatePolicyForm } from "@/components/create-policy-form";
 
