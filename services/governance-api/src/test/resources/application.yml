@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────
+# NexusGuard Governance API — Test Configuration
+# Overrides application.yml for the 'test' Spring profile.
+# Uses H2 in-memory DB and disables external dependencies.
+# ─────────────────────────────────────────────
+
+spring:
+  # ── In-memory H2 (replaces Neon PostgreSQL in CI) ──
+  datasource:
+    url: jdbc:h2:mem:nexusguard_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # ── Stub JWK set URI (skips OIDC discovery, no network call at startup) ──
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9999/auth/jwks
+
+  # ── Disable Flyway / Liquibase if present ──
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
+
+# ── Stub custom app properties (satisfies @Value in SecurityConfig) ──
+nexusguard:
+  service-token: ci-test-token
+  cors:
+    allowed-origins: http://localhost:3000

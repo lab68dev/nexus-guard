@@ -67,7 +67,7 @@ jobs:
       - name: Build Java service for CodeQL
         if: matrix.language == 'java-kotlin'
         working-directory: services/governance-api
-        run: ./mvnw clean compile --no-transfer-progress -DskipTests
+        run: mvn clean compile --no-transfer-progress -DskipTests
 
       # ── Auto-build for JavaScript (CodeQL handles TS/JS automatically) ──
       - name: Autobuild (JavaScript/TypeScript)
