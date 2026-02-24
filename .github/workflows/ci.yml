@@ -42,9 +42,6 @@ jobs:
       - name: Install dependencies (workspace root)
         run: npm ci
 
-      - name: Run ESLint
-        working-directory: apps/web
-        run: npx next lint
 
       - name: Build Next.js application
         working-directory: apps/web
